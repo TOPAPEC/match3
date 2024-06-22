@@ -1,88 +1,4 @@
-export class Gem extends PIXI.Container {
-    dy;
-    sy;
-    distY;
-    isMoving = false;
-    moveTime;
-
-    constructor(texture, tid, x, y, poofSpritesheet) {
-        super();
-        this.sprite = new PIXI.Sprite(texture);
-        this.addChild(this.sprite);
-        this.x = x;
-        this.y = y;
-        this.tid = tid;
-        this.is_checked = false;
-        this.isMoving = false;
-        this.dy = 0;
-        this.dx = 0;
-        this.sy = 0;
-        this.sx = 0;
-        this.distY = 0;
-        this.distX = 0;
-        this.moveProgress = 0;
-        this.animation = new PIXI.AnimatedSprite(Object.values(poofSpritesheet.textures));
-        this.animation.visible = false;
-        this.animation.animationSpeed = 0.3;
-        this.animation.loop = false;
-        this.impact_animation = false;
-        this.addChild(this.animation);
-    }
-
-    setupAnimation() {
-        this.animation.x = this.width / 2;
-        this.animation.y = this.height * 0.9;
-        this.animation.anchor.set(0.5);
-        this.animation.currentFrame = 0;
-        this.animation.stop()
-        this.animation.visible = false;
-    }
-
-    playAnimation() {
-        this.animation.visible = true;
-        this.animation.play();
-    }
-
-    moveTo(x, y, speed = 2, impact_animation=false) {
-        this.speed = speed;
-        this.impact_animation = impact_animation;
-        this.dy = y;
-        this.dx = x;
-        this.sy = this.y;
-        this.sx = this.x;
-        this.distX = this.dx - this.sx;
-        this.distY = this.dy - this.sy;
-        this.isMoving = true;
-    }
-
-    speed_transform(x) {
-        return Math.pow(x, 0.5) * this.speed + 0.5;
-    }
-
-    destroyGem() {
-        this.destroy()
-    }
-
-    process(delta) {
-        if (this.moveProgress < 1) {
-            const speed = this.speed_transform(this.moveProgress);
-            this.moveProgress += speed * delta;
-            this.y = this.sy + this.moveProgress * this.distY;
-            this.x = this.sx + this.moveProgress * this.distX;
-        }
-        else if (this.isMoving === true) {
-            this.x = this.dx;
-            this.y = this.dy;
-            this.isMoving = false;
-            this.moveProgress = 0;
-            if (this.impact_animation) {
-                this.setupAnimation();
-                this.playAnimation();
-            }
-        }
-    }
-
-}
+import {Gem} from "./Gem.js";
 
 export class FieldManagerOptimized extends PIXI.Container {
     field;
@@ -97,6 +13,11 @@ export class FieldManagerOptimized extends PIXI.Container {
     gemUp = null;
     anyMatch = false;
     poofSpritesheet;
+    superJemIds = [9, 10];
+
+    isSuperGem(tid) {
+        return this.superJemIds.includes(tid);
+    }
 
     constructor(spritesheet, x, y, fieldWidth, fieldHeight, gemTypes) {
         super()
@@ -121,7 +42,7 @@ export class FieldManagerOptimized extends PIXI.Container {
         const j1 = Math.floor(gem1.y / this.tsize);
         const i2 = Math.floor(gem2.x / this.tsize);
         const j2 = Math.floor(gem2.y / this.tsize);
-        // console.log(`Swapping {${i1}; ${j1}} of {${i2}; ${j2}}`);
+        console.log(`Swapping {${i1}; ${j1}} of {${i2}; ${j2}}`);
         // console.log(`Fieldxy {${this.x};${this.y}}`)
         // console.log(`Field ${this.width} ${this.height}`)
         if (!(Math.abs(i1 - i2) + Math.abs(j1 - j2) === 1 && Math.abs(i1 - i2) * Math.abs(j1 - j2) === 0)) {
@@ -139,13 +60,43 @@ export class FieldManagerOptimized extends PIXI.Container {
         this.gemDown = this.castXYToGem(local.x, local.y);
     }
 
+    determineDirection(x, y, threshold=0) {
+        const length = Math.sqrt(x * x + y * y);
+
+        if (length <= threshold) {
+            return [0, 0];
+        }
+
+        if (x === 0 && y === 0) {
+            return [0, 0];
+        }
+
+        if (Math.abs(x) > Math.abs(y)) {
+            if (x > 0) {
+                return [1, 0];
+            } else {
+                return [-1, 0];
+            }
+        } else {
+            if (y > 0) {
+                return [0, 1];
+            } else {
+                return [0, -1];
+            }
+        }
+    }
+
     onPointerUpFunc(evt) {
         if (this.gemDown) {
             // console.log("Swapping");
             const local = this.toLocal(evt.data.global);
             this.interactiveChildren = false;
             this.interactive = false;
-            this.gemUp = this.castXYToGem(local.x, local.y);
+            const dx = local.x - (this.gemDown.x + this.tsize / 2);
+            const dy = local.y - (this.gemDown.y + this.tsize / 2);
+            const direction = this.determineDirection(dx, dy);
+            console.log(direction);
+            this.gemUp = this.castXYToGem(this.gemDown.x + direction[0] * this.tsize, this.gemDown.y + direction[1] * this.tsize);
             if(!this.swapGems(this.gemDown, this.gemUp)) {
                 this.gemDown = null;
                 this.gemUp = null;
@@ -199,19 +150,31 @@ export class FieldManagerOptimized extends PIXI.Container {
 
     generateTid(i, j) {
         let tid = 1;
-        if (Math.random() < 0.01) {
-            return 13;
-        }
         do {
             tid = Math.floor(Math.random() * this.gemTypes) + 1;  // Generate a random gem (1 to 8)
         } while (!this.isValidPlacement(i, j, tid));
+        if (Math.random() < 0.005) {
+            return this.superJemIds[0];
+        }
+        if (Math.random() < 0.005) {
+            return this.superJemIds[1];
+        }
         return tid;
     }
 
+    createGem(tid, gemX, gemY) {
+        return new Gem(this.spritesheet.textures[`tile${tid}`], tid, gemX, gemY, this.poofSpritesheet, this.chargedAnimation, this.isSuperGem(tid), this.destoyAnimation);
+    }
+
     async init() {
-        const poofSpritesheet = await this.loadSpritesheed();
-        await poofSpritesheet.parse();
-        this.poofSpritesheet = poofSpritesheet;
+        this.poofSpritesheet = await this.loadSpritesheed();
+        await this.poofSpritesheet.parse();
+        const chargedAnimationTexture = await (await fetch('./tilesets/charged_animation.json')).json();
+        this.chargedAnimation = new PIXI.Spritesheet(await PIXI.Assets.load(chargedAnimationTexture["meta"]["image"]), chargedAnimationTexture);
+        await this.chargedAnimation.parse();
+        const destroyAnimationTexture = await (await fetch('./tilesets/gem_destroy_animation.json')).json();
+        this.destoyAnimation = new PIXI.Spritesheet(await PIXI.Assets.load(destroyAnimationTexture["meta"]["image"]), chargedAnimationTexture);
+        await this.destoyAnimation.parse();
         const textureExample = this.spritesheet.textures["tile1"];
         this.textureHeight = textureExample.height;
         this.textureWidth = textureExample.width;
@@ -223,7 +186,7 @@ export class FieldManagerOptimized extends PIXI.Container {
                 // do {
                 //     tid = Math.floor(Math.random() * this.gemTypes) + 1;  // Generate a random gem (1 to 8)
                 // } while (!this.isValidPlacement(i, j, tid));
-                let gem = new Gem(this.spritesheet.textures[`tile${tid}`], tid, gemX, gemY, poofSpritesheet);
+                let gem = this.createGem(tid, gemX, gemY);
                 this.field[i][j] = gem;
                 this.addChild(gem);
             }
@@ -271,10 +234,10 @@ export class FieldManagerOptimized extends PIXI.Container {
                         const tid = this.generateTid(i, j);
                         const gemX = i * this.tsize;
                         const gemY = -10 * this.tsize;
-                        const new_gem = new Gem(this.spritesheet.textures[`tile${tid}`], tid, gemX, gemY, this.poofSpritesheet);
+                        const new_gem = this.createGem(tid, gemX, gemY);
                         this.addChild(new_gem);
                         this.moveGemToCell(new_gem, i, j);
-                        if (tid !== 13) {
+                        if (!this.superJemIds.includes(tid)) {
                             this.checkForMatch.push([i, j]);
                         }
                     }
@@ -339,7 +302,7 @@ export class FieldManagerOptimized extends PIXI.Container {
             for (const pair of this.destroyQueue) {
                 console.log(`Calling destroy on ${pair}`);
                 if (this.field[pair[0]][pair[1]] !== null) {
-                    if (this.field[pair[0]][pair[1]].tid === 13) {
+                    if (this.superJemIds.includes(this.field[pair[0]][pair[1]].tid)) {
                         this.crossExplosion(pair[0], pair[1]);
                     }
                     this.field[pair[0]][pair[1]].destroyGem();
@@ -352,7 +315,7 @@ export class FieldManagerOptimized extends PIXI.Container {
     }
 
     compareTids(t1, t2) {
-        if (t1 === 13) {
+        if (this.superJemIds.includes(t1)) {
             return true;
         }
         return t1 === t2;

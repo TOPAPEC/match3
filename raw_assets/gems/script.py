@@ -21,7 +21,7 @@ def process_image(image, size=(112, 112)):
 def unite_images(directory, output_path="united_images.png"):
     """Read all images in directory, resize and unite them into a multi-row image."""
     images = []
-    for filename in os.listdir(directory):
+    for filename in sorted(os.listdir(directory)):
         if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
             img_path = os.path.join(directory, filename)
             img = Image.open(img_path)
@@ -31,7 +31,6 @@ def unite_images(directory, output_path="united_images.png"):
     if not images:
         print("No images found in the directory.")
         return
-
     # Calculate grid dimensions
     columns = 5  # or any number you want, or calculate based on the desired layout
     rows = math.ceil(len(images) / columns)

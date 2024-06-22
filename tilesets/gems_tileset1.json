@@ -70,6 +70,6 @@
     "image": "tilesets/united_images.png",
     "format": "RGBA8888",
     "size": { "w": 560, "h": 448 },
-    "scale": "2.0"
+    "scale": "1.5"
   }
 }
