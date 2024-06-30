@@ -1,0 +1,75 @@
+{
+	"frames": {
+		"pauseButton.png": {
+			"frame": {
+				"x": 1,
+				"y": 1,
+				"w": 418,
+				"h": 267
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 418,
+				"h": 267
+			},
+			"sourceSize": {
+				"w": 418,
+				"h": 267
+			}
+		},
+		"selectLevel.png": {
+			"frame": {
+				"x": 421,
+				"y": 1,
+				"w": 429,
+				"h": 404
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 429,
+				"h": 404
+			},
+			"sourceSize": {
+				"w": 429,
+				"h": 404
+			}
+		},
+		"startLevel.png": {
+			"frame": {
+				"x": 1,
+				"y": 407,
+				"w": 407,
+				"h": 367
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 407,
+				"h": 367
+			},
+			"sourceSize": {
+				"w": 407,
+				"h": 367
+			}
+		}
+	},
+	"meta": {
+		"app": "http://www.codeandweb.com/texturepacker",
+		"version": "1.0",
+		"image": "interface/spritesheet.png",
+		"format": "RGBA8888",
+		"size": {
+			"w": 851,
+			"h": 775
+		},
+		"scale": "1"
+	}
+}

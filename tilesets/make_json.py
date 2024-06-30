@@ -25,8 +25,8 @@ def generate_sprite_json(spriteW, spriteH, spriteSheetW, spriteSheetH):
 def main():
     spriteW = 100  # Replace with your sprite width
     spriteH = 100  # Replace with your sprite height
-    spriteSheetW = 600  # Replace with your spritesheet width
-    spriteSheetH = 600  # Replace with your spritesheet height
+    spriteSheetW = 800  # Replace with your spritesheet width
+    spriteSheetH = 800  # Replace with your spritesheet height
 
     data = generate_sprite_json(spriteW, spriteH, spriteSheetW, spriteSheetH)
     json_data = json.dumps(data, indent=2)

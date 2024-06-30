@@ -1,3 +1,7 @@
+
+
+
+
 export class Gem extends PIXI.Container {
     dy;
     sy;
@@ -5,7 +9,7 @@ export class Gem extends PIXI.Container {
     isMoving = false;
     moveTime;
 
-    constructor(texture, tid, x, y, poofSpritesheet, superGemSpritesheet, isSuperGem, destoyAnimSpritesheet) {
+    constructor(sprite, tid, x, y, poofSpritesheet, superGemSpritesheet, isSuperGem, destoyAnimSpritesheet) {
         super();
 
         if (isSuperGem) {
@@ -15,7 +19,7 @@ export class Gem extends PIXI.Container {
             this.superGemAnimation.animationSpeed = 0.8;
             this.addChild(this.superGemAnimation);
         }
-        this.sprite = new PIXI.Sprite(texture);
+        this.sprite = sprite;
         this.addChild(this.sprite);
         this.isSuperGem = isSuperGem;
         if (isSuperGem) {
@@ -32,9 +36,10 @@ export class Gem extends PIXI.Container {
         this.destroyAnimation = new PIXI.AnimatedSprite(Object.values(destoyAnimSpritesheet.textures));
         this.destroyAnimation.visible = false;
         this.destroyAnimation.loop = false;
+        this.destroyAnimation.animationSpeed = 2;
         this.destroyAnimation.x = this.sprite.width / 2;
         this.destroyAnimation.y = this.sprite.height / 2;
-        this.destroyAnimation.animationSpeed = 2;
+        this.destroyAnimation.animationSpeed = 4;
         this.destroyAnimation.anchor.set(0.50, 0.50);
         this.impact_animation = false;
         this.addChild(this.destroyAnimation);
@@ -51,6 +56,7 @@ export class Gem extends PIXI.Container {
         this.distY = 0;
         this.distX = 0;
         this.moveProgress = 0;
+
     }
 
     setupAnimation() {
@@ -98,7 +104,7 @@ export class Gem extends PIXI.Container {
     process(delta) {
         if (this.moveProgress < 1) {
             const speed = this.speed_transform(this.moveProgress);
-            this.moveProgress += speed * delta;
+            this.moveProgress = Math.min(this.moveProgress + speed * delta, 1.0);
             this.y = this.sy + this.moveProgress * this.distY;
             this.x = this.sx + this.moveProgress * this.distX;
         }

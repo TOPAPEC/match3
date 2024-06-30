@@ -184,6 +184,6 @@
   "meta": {
     "image": "tilesets/gems_2.png",
     "format": "RGBA8888",
-    "scale": "1.6"
+    "scale": "1.4"
   }
 }
