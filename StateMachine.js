@@ -1,8 +1,11 @@
+let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
+
 export class StateMachine {
     constructor(stateDict, initialState) {
         this.stateDict = stateDict;
         this.initialState = initialState;
         this.currentState = null;
+        this.chapter = 1;
     }
     init() {
         for (const state in this.stateDict) {
@@ -17,6 +20,9 @@ export class StateMachine {
         }
         this.currentState.end();
         this.currentState = this.stateDict[state];
+        if (state === "game") {
+            this.currentState.fieldManager.chapter = this.chapter;
+        }
         this.currentState.start();
     }
     process(delta) {
@@ -38,15 +44,15 @@ class StateBase {
 }
 
 export class GameState extends StateBase {
-    constructor(app, fieldManager, overlay) {
+    constructor(app, fieldManager){
        super();
        this.fieldManager = fieldManager;
-       this.overlay = overlay;
        this.app = app;
     }
     start() {
         this.fieldManager.visible = true;
         this.fieldManager.setInteractive(true);
+        this.fieldManager.reloadLevel();
     }
     end() {
         this.fieldManager.visible = false;
@@ -84,11 +90,13 @@ export class LevelsState extends StateBase {
     }
     start() {
         this.levelsPage.visible = true;
+        this.levelsPage.start();
     }
     end() {
         this.levelsPage.visible = false;
+        this.levelsPage.end();
     }
     process(delta) {
-
+        this.levelsPage.process(delta);
     }
 }
