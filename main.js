@@ -1,9 +1,10 @@
 let WinScaling = require("./WindowScaling");
 let FieldManager = require("./FieldManagerOptimized.js");
-import {MainMenu} from "./MainMenu.js";
-import {LevelSelection} from "./LevelSelection.js";
-import {GameState, LevelsState, MainMenuState, StateMachine} from "./StateMachine.js";
-import {PlayerProfile} from "./PlayerProfile.js";
+let MainMenu = require("./MainMenu.js").MainMenu;
+let LevelSelection = require("./LevelSelection.js").LevelSelection;
+let _StateMachine = require("./StateMachine.js");
+let GameState = _StateMachine.GameState, LevelsState = _StateMachine.LevelsState, MainMenuState = _StateMachine.MainMenuState, StateMachine = _StateMachine.StateMachine;
+let PlayerProfile = require("./PlayerProfile.js").PlayerProfile;
 let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
 let shared = require("./shared.js");
 let FieldManagerV2 = require("./FieldManagerV2.js").FieldManagerV2;

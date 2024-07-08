@@ -1,7 +1,5 @@
-import {valsWithSubstring} from "./shared";
-import {Position} from "./Position.js";
-import {colorBit} from "./pixi";
-
+let valsWithSubstring = require("./shared.js").valsWithSubstring;
+let Position = require("./Position.js").Position;
 let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
 
 export class FieldElement extends PIXI.Container {
