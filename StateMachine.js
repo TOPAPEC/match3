@@ -7,23 +7,23 @@ export class StateMachine {
         this.currentState = null;
         this.chapter = 1;
     }
-    init() {
+    async init() {
         for (const state in this.stateDict) {
             this.stateDict[state].end();
         }
         this.currentState = this.stateDict[this.initialState];
-        this.currentState.start();
+        await this.currentState.start();
     }
-    changeState(state) {
+    async changeState(state) {
         if (this.currentState === null || this.currentState === state) {
             return;
         }
         this.currentState.end();
         this.currentState = this.stateDict[state];
         if (state === "game") {
-            this.currentState.fieldManager.chapter = this.chapter;
+            this.currentState.chapter = this.chapter;
         }
-        this.currentState.start();
+        await this.currentState.start();
     }
     process(delta) {
         this.currentState.process(delta);
@@ -32,7 +32,7 @@ export class StateMachine {
 
 class StateBase {
 
-    start() {
+    async start() {
 
     }
     end() {
@@ -48,15 +48,14 @@ export class GameState extends StateBase {
        super();
        this.fieldManager = fieldManager;
        this.app = app;
+       this.chapter = 1;
     }
-    start() {
-        this.fieldManager.visible = true;
-        this.fieldManager.setInteractive(true);
-        this.fieldManager.reloadLevel();
+    async start() {
+        this.fieldManager.start();
+        await this.fieldManager.loadLevel(this.chapter);
     }
     end() {
-        this.fieldManager.visible = false;
-        this.fieldManager.setInteractive(false);
+        this.fieldManager.end();
     }
     process(delta) {
         this.fieldManager.process(delta)
@@ -69,7 +68,7 @@ export class MainMenuState extends StateBase {
         super();
         this.mainMenu = mainMenu;
     }
-    start() {
+    async start() {
         this.mainMenu.visible = true;
         this.mainMenu.start();
     }
@@ -88,7 +87,7 @@ export class LevelsState extends StateBase {
         super();
         this.levelsPage = levelsPage;
     }
-    start() {
+    async start() {
         this.levelsPage.visible = true;
         this.levelsPage.start();
     }

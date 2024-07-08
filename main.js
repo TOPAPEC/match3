@@ -6,6 +6,7 @@ import {GameState, LevelsState, MainMenuState, StateMachine} from "./StateMachin
 import {PlayerProfile} from "./PlayerProfile.js";
 let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
 let shared = require("./shared.js");
+let FieldManagerV2 = require("./FieldManagerV2.js").FieldManagerV2;
 
 async function main() {
     const WIDTH = 750;
@@ -32,23 +33,17 @@ async function main() {
 
     const fieldWidth = 9;
     const fieldHeight = 11;
-    const tileSize = spritesheet.textures[`gem1.png`].width / 2;
+    const tileSize = 56;
     const fieldX = (WIDTH - tileSize * fieldWidth) / 2;
     const fieldY = (HEIGHT - tileSize * fieldHeight) / 2;
     const gemTypes = 5;
 
-    const backgroundGame = new PIXI.Sprite(spritesheet.textures[`background.png`]);
-    backgroundGame.width = WIDTH;
-    backgroundGame.height = HEIGHT;
-
-
     const playerData = new PlayerProfile();
     playerData.loadDefault();
 
-    let fieldManager = new FieldManager.FieldManagerOptimized(WIDTH, HEIGHT, spritesheet, fieldX, fieldY, fieldWidth, fieldHeight,
-        gemTypes, backgroundGame, playerData);
+    let fieldManager = new FieldManagerV2(fieldX, fieldY, WIDTH, HEIGHT, tileSize, spritesheet, playerData)
     fieldManager.visible = false;
-    await fieldManager.init();
+    await fieldManager.loadLevel(1);
     app.stage.addChild(fieldManager);
 
     resizer.resize();
@@ -77,7 +72,7 @@ async function main() {
         "game": new GameState(app, fieldManager)
     };
 
-    const stateController = new StateMachine(stateDict, "mainMenu");
+    const stateController = new StateMachine(stateDict, "levelSelection");
 
     mainMenu.onButtonStart = () => {console.log("TAPPED"); stateController.changeState("levelSelection");};
     await mainMenu.init();
