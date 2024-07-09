@@ -8,6 +8,9 @@ export class FieldElement extends PIXI.Container {
     destinationPosition;
     timePassed = 0;
     checked = false; // FOR FIELD MANAGER!
+    elementHP = 1;
+    gemNumber = -1;
+    _reward = 1;
     MovementInterpolationFunc = (x) => {return 10 * x * x * x};
     static ElementStates = Object.freeze({
         Moving: Symbol("Moving"),
@@ -22,6 +25,10 @@ export class FieldElement extends PIXI.Container {
         this.addChild(this.sprite);
     }
 
+    getReward() {
+        return this._reward;
+    }
+
     moveTo(position) {
         this.initialPosition = new Position(this.x, this.y);
         this.destinationPosition = position;
@@ -29,7 +36,13 @@ export class FieldElement extends PIXI.Container {
         this.state = FieldElement.ElementStates.Moving;
     }
 
-    destroyElement() {}
+    destroyElement() {
+        this.elementHP -= 1;
+    }
+
+    isDead() {
+        return this.elementHP <= 0;
+    }
 
     ifWasUpdated() {
         return this.wasUpdatedThisTick;
@@ -40,6 +53,8 @@ export class FieldElement extends PIXI.Container {
             return e1.gemNumber === e2.gemNumber;
         } else if ((e1 instanceof SuperGem && e2 instanceof Gem) || (e2 instanceof SuperGem && e1 instanceof Gem)) {
             return true;
+        } else if (e2 instanceof Destructible2hpFieldWall || e1 instanceof Destructible2hpFieldWall) {
+           return true;
         }
         return false;
     }
@@ -87,17 +102,27 @@ export class Gem extends FieldElement {
     }
 
     static CompareGems(g1, g2) {
+        if (!(g1 instanceof Gem) || !(g2 instanceof Gem)) {
+            return false;
+        }
         return g1.gemNumber === g2.gemNumber;
     }
 
+
     destroyElement() {
         super.destroyElement();
-        this.sprite.visible = false;
-        this.DestroyAnimation.onComplete = () => {
-            this.destroy();
+        if (this.elementHP <= 0) {
+            this.sprite.visible = false;
+            this.DestroyAnimation.onComplete = () => {
+                this.destroy();
+            }
+            this.DestroyAnimation.visible = true;
+            this.DestroyAnimation.play();
         }
-        this.DestroyAnimation.visible = true;
-        this.DestroyAnimation.play();
+    }
+
+    process(delta) {
+        super.process(delta);
     }
 }
 
@@ -115,5 +140,55 @@ export class FieldWall extends FieldElement {
 
     }
 
+    destroyElement() {
+        super.destroyElement();
+        if (this.elementHP <= 0) {
+            this.sprite.visible = false;
+            this.DestroyAnimation.onComplete = () => {
+                this.destroy();
+            }
+            this.DestroyAnimation.visible = true;
+            this.DestroyAnimation.play();
+        }
+        console.log("DAMAGED WALL", this.elementHP);
+    }
+}
+
+export class DestructibleFieldWall extends FieldElement {
+    constructor(x, y, spritesheet, texture, size) {
+        super(texture, size);
+        this.x = x;
+        this.y = y;
+
+    }
+}
+
+export class Destructible2hpFieldWall extends FieldElement {
+    constructor(x, y, spritesheet, texture, damagedTexture, size) {
+        super(texture, size);
+        this.x = x;
+        this.y = y;
+        this.damagedSprite = PIXI.Sprite.from(damagedTexture);
+        this.damagedSprite.width = size;
+        this.damagedSprite.height = size;
+        this.damagedSprite.visible = false;
+        this.addChild(this.damagedSprite);
+        this.elementHP = 2;
+    }
+
+    destroyElement() {
+        super.destroyElement();
+        if (this.elementHP === 1) {
+            this.sprite.visible = false;
+            this.damagedSprite.visible = true;
+        } else if (this.elementHP <= 0) {
+            this.damagedSprite.visible = false;
+            this.destroy();
+        }
+    }
+
+    process(delta) {
+        super.process(delta);
+    }
 
 }

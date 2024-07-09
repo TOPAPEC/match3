@@ -2260,6 +2260,26 @@
 				"h": 256
 			}
 		},
+		"particle1.png": {
+			"frame": {
+				"x": 3010,
+				"y": 1,
+				"w": 44,
+				"h": 44
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 44,
+				"h": 44
+			},
+			"sourceSize": {
+				"w": 44,
+				"h": 44
+			}
+		},
 		"pauseButton.png": {
 			"frame": {
 				"x": 2456,
@@ -2687,7 +2707,7 @@
 		"image": "images/spritesheet.png",
 		"format": "RGBA8888",
 		"size": {
-			"w": 3051,
+			"w": 3055,
 			"h": 2564
 		},
 		"scale": "1"

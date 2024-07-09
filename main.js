@@ -8,6 +8,7 @@ let PlayerProfile = require("./PlayerProfile.js").PlayerProfile;
 let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
 let shared = require("./shared.js");
 let FieldManagerV2 = require("./FieldManagerV2.js").FieldManagerV2;
+const particles = require("@pixi/particle-emitter/lib/particle-emitter.js");
 
 async function main() {
     const WIDTH = 750;
@@ -32,17 +33,14 @@ async function main() {
     await spritesheet.parse();
 
 
-    const fieldWidth = 9;
-    const fieldHeight = 11;
-    const tileSize = 56;
-    const fieldX = (WIDTH - tileSize * fieldWidth) / 2;
-    const fieldY = (HEIGHT - tileSize * fieldHeight) / 2;
-    const gemTypes = 5;
+    await PIXI.Assets.load("./particles/score.json");
+    const tileSize = 64;
+    const gemTypes = 4;
 
     const playerData = new PlayerProfile();
     playerData.loadDefault();
 
-    let fieldManager = new FieldManagerV2(fieldX, fieldY, WIDTH, HEIGHT, tileSize, spritesheet, playerData)
+    let fieldManager = new FieldManagerV2(WIDTH, HEIGHT, tileSize, spritesheet, playerData)
     fieldManager.visible = false;
     await fieldManager.loadLevel(1);
     app.stage.addChild(fieldManager);
@@ -56,10 +54,6 @@ async function main() {
 
 
     app.stage.eventMode = 'static';
-
-    const mainMenuSpritesheetConf = await (await fetch('./interface/spritesheet.json')).json();
-    const mainMenuSpritesheet = new PIXI.Spritesheet(await PIXI.Assets.load(mainMenuSpritesheetConf["meta"]["image"]), mainMenuSpritesheetConf);
-    await mainMenuSpritesheet.parse();
 
     const mainMenu = new MainMenu(WIDTH, HEIGHT, () => {}, () => {}, spritesheet);
     const levelSelection = new LevelSelection(WIDTH, HEIGHT, spritesheet);
@@ -87,6 +81,7 @@ async function main() {
         const delta = app.ticker.elapsedMS / 1000;
         stateController.process(delta);
     }
+
 
 
 
