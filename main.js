@@ -5,7 +5,7 @@ let LevelSelection = require("./LevelSelection.js").LevelSelection;
 let _StateMachine = require("./StateMachine.js");
 let GameState = _StateMachine.GameState, LevelsState = _StateMachine.LevelsState, MainMenuState = _StateMachine.MainMenuState, StateMachine = _StateMachine.StateMachine;
 let PlayerProfile = require("./PlayerProfile.js").PlayerProfile;
-let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
+let PIXI = require("./node_modules/pixi.js/lib/index.mjs");
 let shared = require("./shared.js");
 let FieldManagerV2 = require("./FieldManagerV2.js").FieldManagerV2;
 const particles = require("@pixi/particle-emitter/lib/particle-emitter.js");

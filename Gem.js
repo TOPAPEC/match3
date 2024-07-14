@@ -1,4 +1,4 @@
-let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
+let PIXI = require("./node_modules/pixi.js/lib/index.mjs");
 
 export class Gem extends PIXI.Container {
     dy;

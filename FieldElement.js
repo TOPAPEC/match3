@@ -1,6 +1,6 @@
 let valsWithSubstring = require("./shared.js").valsWithSubstring;
 let Position = require("./Position.js").Position;
-let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
+let PIXI = require("./node_modules/pixi.js/lib/index.mjs");
 
 export class FieldElement extends PIXI.Container {
     wasUpdatedThisTick = false;

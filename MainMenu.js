@@ -1,4 +1,4 @@
-let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
+let PIXI = require("./node_modules/pixi.js/lib/index.mjs");
 
 
 export class MainMenu extends PIXI.Container {
@@ -37,7 +37,7 @@ export class MainMenu extends PIXI.Container {
         rectangle.height = this.screenHeight;
         rectangle.tint = 0x0000000;
         rectangle.alpha = 0.3;
-        this.addChild(rectangle)
+        this.addChild(rectangle);
 
 
         this.startButton = new PIXI.Sprite(this.spriteSheet.textures["startLevel.png"]);

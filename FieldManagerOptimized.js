@@ -1,7 +1,7 @@
 import {Gem} from "./Gem.js";
 import {GameOverLay} from "./GameOverLay.js";
 import {valsWithSubstring} from "./shared";
-let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
+let PIXI = require("./node_modules/pixi.js/lib/index.mjs");
 
 export class FieldManagerOptimized extends PIXI.Container {
     field;

@@ -1,5 +1,5 @@
 
-let PIXI = require("./node_modules/pixi.js/dist/pixi.mjs");
+let PIXI = require("./node_modules/pixi.js/lib/index.mjs");
 const {valsWithSubstring} = require("./shared");
 let FieldElement = require("./FieldElement.js").FieldElement;
 let Position = require("./Position.js").Position;
