@@ -28,8 +28,8 @@ export class FieldManagerV2 extends PIXI.Container {
     checkQueue = [];
     tmpQueue = [];
     currentScore = 0;
-    dx = [0, 1, -1, 0];
-    dy = [1, 0, 0, -1];
+    dx = [1, 0, -1, 0];
+    dy = [0, 1, 0, -1];
     states = Object.freeze({
         Moving: Symbol("Moving"),
         CheckMatchAndDestroy: Symbol("CheckMatchAndDestroy"),
@@ -87,7 +87,7 @@ export class FieldManagerV2 extends PIXI.Container {
 
     async _LevelConfigurationGenerator() {
         const layoutConfig = await (await fetch("levels/level1_1.json")).json();
-        return {layout: layoutConfig.schema, gemNumber: 6};
+        return {layout: layoutConfig.schema, gemNumber: 5};
     }
 
     _isValidPlacement(row, col, gem) {
@@ -243,7 +243,10 @@ export class FieldManagerV2 extends PIXI.Container {
         this.field[pos2.x][pos2.y] = first;
     }
 
-    _checkMatch(x, y) {
+    _checkMatch(x, y, dir) {
+        if (dir === null) {
+            console.log("FUUUUCK");
+        }
         this.field[x][y].checked = true;
         if (this.wallNames.includes(this.field[x][y].constructor.name)) {
             this.wallDamageQueue.push([x, y]);
@@ -251,6 +254,9 @@ export class FieldManagerV2 extends PIXI.Container {
         }
         this.tmpQueue.push([x, y]);
         for (let i = 0; i < this.dx.length; i++) {
+            if (i % 2 !== dir) {
+                continue;
+            }
             const nx = x + this.dx[i];
             const ny = y + this.dy[i];
             if (nx < 0 || nx >= this.field.length || ny < 0 || ny >= this.field[0].length){
@@ -261,7 +267,7 @@ export class FieldManagerV2 extends PIXI.Container {
                 continue;
             }
             // console.log(`Match at {${nx}; ${ny}}`)
-            this._checkMatch(nx, ny);
+            this._checkMatch(nx, ny, dir);
         }
     }
 
@@ -323,20 +329,26 @@ export class FieldManagerV2 extends PIXI.Container {
         } else if (this.managerState === this.states.CheckMatchAndDestroy) {
             let destroyedAny = false;
             for (let pos of this.checkQueue) {
-                this._checkMatch(pos[0], pos[1]);
-                // console.log("Tmpqueue", this.tmpQueue.length);
-                if (this.tmpQueue.length >= 3) {
-                    this.destroyQueue = this.destroyQueue.concat(this.tmpQueue);
-                    this.destroyQueue = this.destroyQueue.concat(this.wallDamageQueue);
+                for (let dir = 0; dir < 2; ++dir) {
+                    this._checkMatch(pos[0], pos[1], dir);
+                    // console.log("Tmpqueue", this.tmpQueue.length);
+                    if (this.tmpQueue.length >= 3) {
+                        this.destroyQueue = this.destroyQueue.concat(this.tmpQueue);
+                        this.destroyQueue = this.destroyQueue.concat(this.wallDamageQueue);
+                    }
+                    this.tmpQueue = [];
+                    this.wallDamageQueue = [];
                 }
-                this.tmpQueue = [];
-                this.wallDamageQueue = [];
             }
             for (let pos of this.destroyQueue) {
                 // console.log("Destroying", pos[0], pos[1]);
-                this.field[pos[0]][pos[1]].destroyElement();
-                if (this.field[pos[0]][pos[1]].isDead()) {
-                    this.currentScore += this.field[pos[0]][pos[1]].getReward();
+                let gem = this.field[pos[0]][pos[1]];
+                if (gem === null) {
+                    continue;
+                }
+                gem.destroyElement();
+                if (gem.isDead()) {
+                    this.currentScore += gem.getReward();
                     this.field[pos[0]][pos[1]] = null;
                     destroyedAny = true;
                 }

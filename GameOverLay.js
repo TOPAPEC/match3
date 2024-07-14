@@ -11,7 +11,8 @@ export class GameOverLay extends PIXI.Container {
         this.playerData = playerData;
         this.currentScore = playerData.getCurrentScore();
         this.changeProgress = 0;
-        this.textChangeProgress = 0;
+        this.textChangeSpeed = 2;
+
         this.initialTextSize = 1;
         this.endTextSize = 1.5;
         this.currentTextSize = 1.0;
@@ -65,36 +66,38 @@ export class GameOverLay extends PIXI.Container {
             const speed = this.speed_transform(this.changeProgress);
             console.log("speed", speed, this.changeProgress);
             this.changeProgress = Math.min(this.changeProgress + delta * speed, 1);
-            this.textChangeProgress = Math.min(this.changeProgress + delta * speed * 4, 1);
             this.currentScore = Math.ceil(this.initialScore + (this.endScore - this.initialScore) * this.changeProgress);
-            if (this.textChangeProgress < 1) {
-                this.currentTextSize = this.initialTextSize + (this.endTextSize - this.initialTextSize) * this.textChangeProgress;
-            }
+            this.currentTextSize = Math.min(this.initialTextSize +
+                (this.endTextSize - this.initialTextSize) * (this.changeProgress * this.textChangeSpeed), this.endTextSize);
             this.scoreCounter.text = this.currentScore
             // console.log("Current text size", this.currentTextSize, this.changeProgress, this.currentScore);
             this.scoreCounter.scale.set(this.currentTextSize);
             if (Math.abs(this.changeProgress - 1.0) < 0.01) {
                 this.emitter.emit = false;
                 this.currentScore = this.endScore;
-                this.changeProgress = 0;
             }
-        } else if (Math.abs(this.currentTextSize - this.initialTextSize) > 0.0001) {
-            const speed = this.speed_transform(this.changeProgress);
-            this.changeProgress = Math.min(this.changeProgress + delta * speed, 1);
-            this.currentTextSize = this.endTextSize + (this.initialTextSize - this.endTextSize ) * this.changeProgress;
+        } else if (this.currentTextSize > this.initialTextSize) {
+            const speed = this.speed_transform(this.changeProgress) * 0.5;
+            this.changeProgress = Math.min(this.changeProgress - delta * speed, 1);
+            this.currentTextSize = this.endTextSize + (this.initialTextSize - this.endTextSize) * (1 - this.changeProgress);
             console.log("CurrentTextSize", this.currentTextSize, this.changeProgress);
             this.scoreCounter.scale.set(this.currentTextSize);
+        } else {
+            this.currentTextSize = this.initialTextSize;
         }
+
     }
 
     changeScore(newVal) {
+        this.currentTextSize = this.initialTextSize;
+        this.currentTextSize = this.endScore;
+
         this.initialScore = this.currentScore;
         this.endTextSize = 1.0 + 1.0 * (Math.max(Math.log10(newVal - this.currentScore), 1.0) - 1);
         this.emitter.frequency = 1 / ((Math.max(Math.log10(newVal - this.currentScore), 1.0) - 1) * 1000);
         this.emitter.emit = true;
         this.endScore = newVal;
         this.changeProgress = 0;
-        this.textChangeProgress = 0;
         console.log("CHANGING", this.endScore, this.endTextSize, this.emitter.maxParticles);
     }
 
