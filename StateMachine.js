@@ -52,6 +52,7 @@ export class GameState extends StateBase {
     }
     async start() {
         this.fieldManager.start();
+        console.log("GameState.chapter", this.chapter)
         await this.fieldManager.loadLevel(this.chapter);
     }
     end() {

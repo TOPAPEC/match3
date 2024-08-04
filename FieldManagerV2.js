@@ -15,7 +15,16 @@ export class FieldManagerV2 extends PIXI.Container {
     wallPaperName;
     gems = [];
     walls = [];
-    superGems = {};
+    superGemsEnum = Object.freeze({
+        Vertical: Symbol.for("Vertical"),
+        Horizontal: Symbol.for("Horizontal"),
+        Cross: Symbol.for("Cross"),
+        Bomb: Symbol.for("Bomb"),
+        Megabomb: Symbol.for("Megabomb"),
+    })
+    superGems = {
+
+    };
     winConditions = [];
     winConditionIdx;
     fieldLayouts = []
@@ -27,7 +36,9 @@ export class FieldManagerV2 extends PIXI.Container {
     wallDamageQueue = [];
     checkQueue = [];
     tmpQueue = [];
+    superGemsToCreate = [];
     currentScore = 0;
+    superGemSpawnEnabled = true;
     dx = [1, 0, -1, 0];
     dy = [0, 1, 0, -1];
     states = Object.freeze({
@@ -62,11 +73,11 @@ export class FieldManagerV2 extends PIXI.Container {
         this.firstTouchPosition = null;
         this.secondTouchPosition = null;
         this.onpointerdown = (e) => {
-            console.log("onpointerdown");
+            // console.log("onpointerdown");
             this.firstTouchPosition = this.toLocal(e.global.clone());
         }
         this.onpointerup = (e) => {
-            console.log("onpointerup");
+            // console.log("onpointerup");
             this.secondTouchPosition = this.toLocal(e.global.clone());
         }
         this.overlay = new GameOverLay(this.screenWidth, this.screenHeight, this.playerData, this.spritesheet);
@@ -116,7 +127,7 @@ export class FieldManagerV2 extends PIXI.Container {
     _generateGemID(i, j) {
         let tid = 1;
         do {
-            tid = Math.floor(Math.random() * (this.gems.length - 1)) + 1;  // Generate a random gem (1 to 8)
+            tid = Math.floor(Math.random() * (this.gems.length - 1));
         } while (!this._isValidPlacement(i, j, tid));
         return tid;
     }
@@ -138,6 +149,16 @@ export class FieldManagerV2 extends PIXI.Container {
         return new Gem(x, y, this.spritesheet, gemID, this._getGemTexture(Gem.name, gemID), this.tileSize);
     }
 
+    generateSuperGem(x, y, gemType) {
+        console.log(gemType);
+        let gType = Symbol.keyFor(gemType);
+        let textureName = `superGemChapter${this.chapterNumber}_${gType}.png`;
+        let texture =  this.spritesheet.textures[textureName];
+        console.log("super texture", texture, gType, textureName);
+
+        return new SuperGem(x, y, this.spritesheet, gType, texture, this.tileSize);
+    }
+
     _getWallTexture(wallId) {
         if (wallId === 0) {
             const rectangle = PIXI.Texture.WHITE.clone();
@@ -152,6 +173,18 @@ export class FieldManagerV2 extends PIXI.Container {
         }
     }
 
+    _getSuperGemTexture(gemId) {
+        return this.superGems[gemId];
+    }
+
+    _matchedCountToSuperGem(count, direction) {
+        if (count === 4) {
+            return 1 + direction;
+        } else if (count === 5) {
+            return 2;
+        }
+    }
+
     generateWall(x, y) {
         const wallId = 0;
         return new Destructible2hpFieldWall(x, y, this.spritesheet, this._getWallTexture(wallId), this._getWallTexture(wallId + 1), this.tileSize);
@@ -162,6 +195,7 @@ export class FieldManagerV2 extends PIXI.Container {
         this.x = (this.screenWidth - this.tileSize * config.layout.length) / 2;
         this.y = (this.screenHeight - this.tileSize * config.layout[0].length) / 2;
         this.chapterNumber = chapter;
+        // console.log("CHAPTER NUMBER 0", this.chapterNumber);
         this.background = new PIXI.Sprite(this.spritesheet.textures[`backgroundChapter${this.chapterNumber}.jpg`]);
         this.addChild(this.background);
         this.overlay.init();
@@ -175,6 +209,7 @@ export class FieldManagerV2 extends PIXI.Container {
             this.superGems = valsWithSubstring(this.spritesheet.textures, `superGemChapter${this.chapterNumber}_`)
             this.walls = valsWithSubstring(this.spritesheet.textures, `wallChapter${this.chapterNumber}_`)
         }
+        this.field = [];
         this.gemContainer = new PIXI.Container();
         this.addChild(this.gemContainer);
         for (let i = 0; i < config.layout.length; i++) {
@@ -193,8 +228,8 @@ export class FieldManagerV2 extends PIXI.Container {
         }
 
         this.addChild(this.overlay);
-        // console.log(this.x, this.y, this.field[0][0].x, this.field[0][0].y);
         this.managerState = this.states.Moving;
+        // console.log("CHAPTER NUMBER", this.chapterNumber);
     }
 
 
@@ -247,8 +282,13 @@ export class FieldManagerV2 extends PIXI.Container {
         if (dir === null) {
             console.log("FUUUUCK");
         }
+        if (this.field[x][y] instanceof SuperGem) {
+            console.log("Trying to check supergem");
+            return;
+        }
         this.field[x][y].checked = true;
         if (this.wallNames.includes(this.field[x][y].constructor.name)) {
+            console.log("REC MATCH WALL", x, y);
             this.wallDamageQueue.push([x, y]);
             return;
         }
@@ -260,6 +300,9 @@ export class FieldManagerV2 extends PIXI.Container {
             const nx = x + this.dx[i];
             const ny = y + this.dy[i];
             if (nx < 0 || nx >= this.field.length || ny < 0 || ny >= this.field[0].length){
+                continue;
+            }
+            if (this.field[nx][ny] instanceof SuperGem) {
                 continue;
             }
             // console.log(`Trying match {${x}; ${y}} with {${nx}; ${ny}} ${this.field[x][y].gemNumber} === ${this.field[nx][ny].gemNumber}`);
@@ -274,6 +317,7 @@ export class FieldManagerV2 extends PIXI.Container {
     process(delta) {
         console.log(this.managerState);
         this.overlay.process(delta);
+        this.superGemSpawnEnabled = true;
         if (this.managerState === this.states.Moving) {
             let childMoved = false;
             // if (this.isSwappingGems) {
@@ -281,6 +325,9 @@ export class FieldManagerV2 extends PIXI.Container {
             // }
             for (let child of this.gemContainer.children) {
                 if (this.fieldElementNames.includes(child.constructor.name)) {
+                    // if (child.constructor.name === SuperGem.name) {
+                    //     console.log("Updating supergem");
+                    // }
                     child.process(delta);
                     if (child.wasUpdatedThisTick) {
                         childMoved = true;
@@ -311,8 +358,22 @@ export class FieldManagerV2 extends PIXI.Container {
                     this.swipeSecondPosition.y < this.field[0].length) {
                     console.log("Swipedir", swipeDir);
                     this._swapGems(this.swipeFirstPosition, this.swipeSecondPosition);
-                    this.checkQueue.push([this.swipeFirstPosition.x, this.swipeFirstPosition.y]);
-                    this.checkQueue.push([this.swipeSecondPosition.x, this.swipeSecondPosition.y]);
+                    let firstGem = this.field[this.swipeFirstPosition.x][this.swipeFirstPosition.y];
+                    let secondGem = this.field[this.swipeSecondPosition.x][this.swipeSecondPosition.y];
+                    if (firstGem instanceof SuperGem) {
+                        this.destroyQueue = this.destroyQueue.concat(firstGem.triggerSuperGem(this.swipeFirstPosition.x,
+                            this.swipeFirstPosition.y, this.field.length, this.field[0].length));
+                        this.superGemSpawnEnabled = false;
+                    } else {
+                        this.checkQueue.push([this.swipeFirstPosition.x, this.swipeFirstPosition.y]);
+                    }
+                    if (secondGem instanceof SuperGem) {
+                        this.destroyQueue = this.destroyQueue.concat(secondGem.triggerSuperGem(this.swipeSecondPosition.x,
+                            this.swipeSecondPosition.y, this.field.length, this.field[0].length));
+                        this.superGemSpawnEnabled = false;
+                    } else {
+                        this.checkQueue.push([this.swipeSecondPosition.x, this.swipeSecondPosition.y]);
+                    }
                     this.isSwappingGems = true;
                     this.managerState = this.states.Moving;
                     this.eventMode = "none";
@@ -329,15 +390,39 @@ export class FieldManagerV2 extends PIXI.Container {
         } else if (this.managerState === this.states.CheckMatchAndDestroy) {
             let destroyedAny = false;
             for (let pos of this.checkQueue) {
+                let superGems = [];
                 for (let dir = 0; dir < 2; ++dir) {
                     this._checkMatch(pos[0], pos[1], dir);
                     // console.log("Tmpqueue", this.tmpQueue.length);
                     if (this.tmpQueue.length >= 3) {
                         this.destroyQueue = this.destroyQueue.concat(this.tmpQueue);
+                        console.log("wall damage queue size", this.wallDamageQueue.length);
                         this.destroyQueue = this.destroyQueue.concat(this.wallDamageQueue);
+                        if (this.tmpQueue.length === 4) {
+                            if (dir === 0) {
+                                superGems.push(this.superGemsEnum.Horizontal);
+                            } else {
+                                superGems.push(this.superGemsEnum.Vertical);
+                            }
+                        } else if (this.tmpQueue.length >= 5) {
+
+                            superGems.push(this.superGemsEnum.Bomb);
+                        }
                     }
                     this.tmpQueue = [];
                     this.wallDamageQueue = [];
+                }
+                if (superGems.length > 0 && this.superGemSpawnEnabled) {
+                    console.log("Adding superGems", pos[0], pos[1])
+                    if (superGems.includes(this.superGemsEnum.Bomb)) {
+                        this.superGemsToCreate.push([pos[0], pos[1], this.superGemsEnum.Bomb]);
+                    } else if (superGems.includes(this.superGemsEnum.Horizontal) && superGems.includes(this.superGemsEnum.Vertical)) {
+                        this.superGemsToCreate.push([pos[0], pos[1], this.superGemsEnum.Cross]);
+                    } else if (superGems.includes(this.superGemsEnum.Vertical)) {
+                        this.superGemsToCreate.push([pos[0], pos[1], this.superGemsEnum.Vertical]);
+                    } else if (superGems.includes(this.superGemsEnum.Horizontal)) {
+                        this.superGemsToCreate.push([pos[0], pos[1], this.superGemsEnum.Horizontal]);
+                    }
                 }
             }
             for (let pos of this.destroyQueue) {
@@ -373,6 +458,15 @@ export class FieldManagerV2 extends PIXI.Container {
                 }
             }
         } else if (this.managerState === this.states.Refill) {
+            for (let superGem of this.superGemsToCreate) {
+                let x = superGem[0];
+                let y = superGem[1];
+                let gemType = superGem[2];
+                this.field[x][y] = this.generateSuperGem(x * this.tileSize, -4 * this.tileSize, gemType);
+                this.field[x][y].moveTo(new Position(x * this.tileSize, y * this.tileSize));
+                this.gemContainer.addChild(this.field[x][y]);
+            }
+            this.superGemsToCreate = [];
             for (let i = 0; i < this.field.length; i++) {
                 let j = this.field[0].length - 1;
                 while (j >= 0) {

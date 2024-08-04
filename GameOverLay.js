@@ -31,7 +31,7 @@ export class GameOverLay extends PIXI.Container {
             }
         )
         this.scoreCounter.anchor.set(0.5);
-        console.log(this.scoreCounter, this.pauseButton);
+        // console.log(this.scoreCounter, this.pauseButton);
         this.addChild(this.pauseButton);
         const cnt = new PIXI.ParticleContainer();
         this.addChild(cnt);
@@ -39,7 +39,7 @@ export class GameOverLay extends PIXI.Container {
         this.playerData.addScoreUpdateHook((newScore) =>  {this.changeScore(newScore)});
 
         let config = PIXI.Assets.get("./particles/score.json");
-        console.log("PART CONFIG", config);
+        // console.log("PART CONFIG", config);
         config.behaviors.push({ type: 'textureSingle', config: { texture: this.spritesheet.textures["particle1.png"] } });
         this.emitter = new particles.Emitter(cnt, config);
         this.emitter.emit = false;
@@ -47,7 +47,7 @@ export class GameOverLay extends PIXI.Container {
     }
 
     init() {
-        console.log("SCREEN WIDTH", this.screenWidth, this.screenHeight);
+        // console.log("SCREEN WIDTH", this.screenWidth, this.screenHeight);
         this.pauseButton.x = -this.getGlobalPosition().x + this.screenWidth / 8 * 7;
         this.pauseButton.y = -this.getGlobalPosition().y + this.screenHeight * 0.07;
         this.scoreCounter.x = this.screenWidth / 2 - this.getGlobalPosition().x;
@@ -64,7 +64,7 @@ export class GameOverLay extends PIXI.Container {
         if (Math.abs(this.changeProgress - 1.0) > 0.01 && Math.abs(this.endScore - this.currentScore) > 0.001) {
             // console.log("Transitioning");
             const speed = this.speed_transform(this.changeProgress);
-            console.log("speed", speed, this.changeProgress);
+            // console.log("speed", speed, this.changeProgress);
             this.changeProgress = Math.min(this.changeProgress + delta * speed, 1);
             this.currentScore = Math.ceil(this.initialScore + (this.endScore - this.initialScore) * this.changeProgress);
             this.currentTextSize = Math.min(this.initialTextSize +
@@ -80,12 +80,11 @@ export class GameOverLay extends PIXI.Container {
             const speed = this.speed_transform(this.changeProgress) * 0.5;
             this.changeProgress = Math.min(this.changeProgress - delta * speed, 1);
             this.currentTextSize = this.endTextSize + (this.initialTextSize - this.endTextSize) * (1 - this.changeProgress);
-            console.log("CurrentTextSize", this.currentTextSize, this.changeProgress);
+            // console.log("CurrentTextSize", this.currentTextSize, this.changeProgress);
             this.scoreCounter.scale.set(this.currentTextSize);
         } else {
             this.currentTextSize = this.initialTextSize;
         }
-
     }
 
     changeScore(newVal) {
@@ -98,7 +97,7 @@ export class GameOverLay extends PIXI.Container {
         this.emitter.emit = true;
         this.endScore = newVal;
         this.changeProgress = 0;
-        console.log("CHANGING", this.endScore, this.endTextSize, this.emitter.maxParticles);
+        // console.log("CHANGING", this.endScore, this.endTextSize, this.emitter.maxParticles);
     }
 
 }

@@ -74,9 +74,6 @@ async function main() {
     levelSelection.startGameFunc = (chapterNumber) => {console.log("Game Start"); stateController.chapter = chapterNumber; stateController.changeState("game");};
     await levelSelection.init();
     await stateController.init();
-
-    fieldManager.loadLevel((await (await fetch("./levels/level1_1.json")).json()).schema);
-
     function gameLoop() {
         const delta = app.ticker.elapsedMS / 1000;
         stateController.process(delta);

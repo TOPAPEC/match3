@@ -127,8 +127,73 @@ export class Gem extends FieldElement {
 }
 
 export class SuperGem extends FieldElement {
-    constructor() {
-        super();
+    constructor(x, y, spritesheet, superType, texture, size ) {
+        super(texture, size);
+        this.destroyAnimation = new PIXI.AnimatedSprite(valsWithSubstring(spritesheet.textures, "gemDestroy"));
+        this.destroyAnimation.visible = false;
+        this.destroyAnimation.loop = false;
+        this.destroyAnimation.animationSpeed = 2;
+        this.destroyAnimation.x = this.sprite.width / 2;
+        this.destroyAnimation.y = this.sprite.height / 2;
+        this.destroyAnimation.animationSpeed = 4;
+        this.destroyAnimation.anchor.set(0.50, 0.50);
+        this.x = x;
+        this.y = y;
+        this.superType = superType;
+        this.superGemAnimation = new PIXI.AnimatedSprite(valsWithSubstring(spritesheet.textures, "charged_animationimage"));
+        this.superGemAnimation.loop = true;
+        this.superGemAnimation.play();
+        this.superGemAnimation.animationSpeed = 0.8;
+        // this.addChild(this.superGemAnimation);
+
+        this.impact_animation = false;
+        // this.addChild(this.destroyAnimation);
+    }
+
+    triggerSuperGem(i, j, fieldWidth, fieldHeight) {
+        console.log("Got field width and height", fieldWidth, fieldHeight);
+        let result = [];
+        switch(this.superType) {
+            case "Horizontal":
+                for (let ni = 0; ni < fieldWidth; ni++) {
+                    result.push([ni, j])
+                }
+                break;
+            case "Vertical":
+                for (let nj = 0; nj < fieldHeight; nj++) {
+                    result.push([i, nj])
+                }
+                break;
+            case "Cross":
+                for (let ni = 0; ni < fieldWidth; ni++) {
+                    result.push([ni, j])
+                }
+                for (let nj = 0; nj < fieldHeight; nj++) {
+                    result.push([i, nj])
+                }
+                break;
+            case "Bomb":
+                result.push([i, j]);
+                break;
+
+        }
+        return result;
+    }
+
+    destroyElement() {
+        super.destroyElement();
+        if (this.elementHP <= 0) {
+            this.sprite.visible = false;
+            this.destroyAnimation.onComplete = () => {
+                this.destroy();
+            }
+            this.destroyAnimation.visible = true;
+            this.destroyAnimation.play();
+        }
+    }
+
+    process(delta) {
+        super.process(delta);
     }
 }
 

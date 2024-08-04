@@ -9,10 +9,11 @@ export class LevelSelection extends PIXI.Container {
         this.startButtonY = screenHeight / 4 * 3;
         this.startButtonX = screenWidth / 2;
         this.startButtonChangeY = 0;
+        this.currentChapter = 1;
         this.timePassed = 0;
     }
     async init() {
-        this.background = new PIXI.Sprite(this.spritesheet.textures[`backgroundChapter1.jpg`]);
+        this.background = new PIXI.Sprite(this.spritesheet.textures[`backgroundChapter${this.currentChapter}.jpg`]);
         this.background.width = this.screenWidth;
         this.background.height = this.screenHeight;
         this.addChild(this.background);
@@ -33,7 +34,7 @@ export class LevelSelection extends PIXI.Container {
         this.startButton.onpointerleave = () => {
             this.startButton.texture = this.spritesheet.textures[`ButtonDefault.png`];
         }
-        this.startButton.onpointerup = () => {this.startGameFunc()};
+        this.startButton.onpointerup = () => {this.startGameFunc(this.currentChapter);};
         this.ButtonText = new PIXI.BitmapText("Begin game",
             {
                 fontName: 'ToxigenesisRg-Bold',
